@@ -1,0 +1,607 @@
+// File: build.gradle (Module: app)
+
+// ... (bagian atas)
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // Dependencies untuk CRUD dan List
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+
+
+
+// Package: com.example.pretes_nama.model
+package com.example.pretes_nama.model;
+
+import java.io.Serializable;
+
+public class Mahasiswa implements Serializable {
+    private int id;
+    private String name, nim;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNim() {
+        return nim;
+    }
+
+    public void setNim(String nim) {
+        this.nim = nim;
+    }
+}
+
+
+
+// Package: com.example.pretes_nama.db
+package com.example.pretes_nama.db;
+
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import com.example.pretes_nama.model.Mahasiswa;
+import java.util.ArrayList;
+
+public class DbHelper extends SQLiteOpenHelper {
+    public static String DATABASE_NAME = "dbsiakad";
+    private static final int DATABASE_VERSION = 1;
+    private static final String TABLE_STD = "students";
+    private static final String KEY_ID = "id";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_NIM = "nim";
+
+    private static final String CREATE_TABLE_STUDENTS = "CREATE TABLE "
+            + TABLE_STD + "(" + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_NAME + " TEXT, " + KEY_NIM + " TEXT);";
+
+    public DbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_TABLE_STUDENTS);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STD);
+        onCreate(db);
+    }
+
+    // CREATE (C)
+    public long addUserDetail(String nim, String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_NAME, name);
+        values.put(KEY_NIM, nim);
+        long insert = db.insert(TABLE_STD, null, values);
+        db.close();
+        return insert;
+    }
+
+    // READ (R)
+    @SuppressLint("Range")
+    public ArrayList<Mahasiswa> getAllUsers() {
+        ArrayList<Mahasiswa> userModelArrayList = new ArrayList<Mahasiswa>();
+        String selectQuery = "SELECT * FROM " + TABLE_STD;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        if (c.moveToFirst()) {
+            do {
+                Mahasiswa std = new Mahasiswa();
+                std.setId(c.getInt(c.getColumnIndex(KEY_ID)));
+                std.setName(c.getString(c.getColumnIndex(KEY_NAME)));
+                std.setNim(c.getString(c.getColumnIndex(KEY_NIM)));
+                userModelArrayList.add(std);
+            } while (c.moveToNext());
+        }
+        c.close();
+        return userModelArrayList;
+    }
+    
+    // UPDATE (U)
+    public int updateUser(int id, String nim, String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_NAME, name);
+        values.put(KEY_NIM, nim);
+
+        int count = db.update(TABLE_STD, values, KEY_ID + " = ?",
+                new String[]{String.valueOf(id)});
+        db.close();
+        return count;
+    }
+
+    // DELETE (D)
+    public void deleteUser(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_STD, KEY_ID + " = ?",
+                new String[]{String.valueOf(id)});
+        db.close();
+    }
+}
+
+
+
+// Package: com.example.pretes_nama
+package com.example.pretes_nama;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.content.Intent;
+import com.example.pretes_nama.db.DbHelper;
+
+public class MainActivity extends AppCompatActivity {
+    DbHelper dbHelper;
+    private EditText etName, etNim;
+    private Button btnSave, btnList;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new DbHelper(this);
+
+        etName = findViewById(R.id.edt_name);
+        etNim = findViewById(R.id.edt_nim);
+        btnSave = findViewById(R.id.btn_submit);
+        btnList = findViewById(R.id.btn_list);
+
+        // CREATE operation
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String nim = etNim.getText().toString().trim();
+                String name = etName.getText().toString().trim();
+
+                if (nim.isEmpty() || name.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "NIM dan Nama harus diisi!", Toast.LENGTH_SHORT).show();
+                } else {
+                    long result = dbHelper.addUserDetail(nim, name);
+                    if (result > 0) {
+                        Toast.makeText(MainActivity.this, "Data Berhasil Disimpan", Toast.LENGTH_SHORT).show();
+                        etName.setText("");
+                        etNim.setText("");
+                    } else {
+                        Toast.makeText(MainActivity.this, "Gagal menyimpan data", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
+        // Navigate to List
+        btnList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ListMahasiswaActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+}
+
+
+// Package: com.example.pretes_nama
+package com.example.pretes_nama;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import android.os.Bundle;
+import com.example.pretes_nama.adapter.MahasiswaAdapter;
+import com.example.pretes_nama.db.DbHelper;
+import com.example.pretes_nama.model.Mahasiswa;
+import java.util.ArrayList;
+
+public class ListMahasiswaActivity extends AppCompatActivity {
+    private RecyclerView recyclerView;
+    private MahasiswaAdapter adapter;
+    private DbHelper dbHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_list_mahasiswa);
+
+        recyclerView = findViewById(R.id.rview);
+        dbHelper = new DbHelper(this);
+        adapter = new MahasiswaAdapter(this);
+
+        // Setup RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void loadData() {
+        ArrayList<Mahasiswa> studentsArrayList = dbHelper.getAllUsers();
+        adapter.setListStudents(studentsArrayList);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Load atau refresh data setiap kali Activity ini kembali (setelah Update/Delete)
+        loadData();
+    }
+}
+
+
+
+// Package: com.example.pretes_nama
+package com.example.pretes_nama;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.pretes_nama.db.DbHelper;
+import com.example.pretes_nama.model.Mahasiswa;
+
+public class UpdateActivity extends AppCompatActivity {
+    private DbHelper dbHelper;
+    private EditText etName, etNim;
+    private Button btnSave;
+    private Mahasiswa student;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_update);
+
+        dbHelper = new DbHelper(this);
+        etName = findViewById(R.id.edt_name);
+        etNim = findViewById(R.id.edt_nim);
+        btnSave = findViewById(R.id.btn_submit);
+
+        // Mendapatkan data Mahasiswa dari Intent
+        student = (Mahasiswa) getIntent().getSerializableExtra("user");
+        
+        if (student != null) {
+            etName.setText(student.getName());
+            etNim.setText(student.getNim());
+        }
+
+        // UPDATE operation
+        btnSave.setOnClickListener((View v) -> {
+            String newNim = etNim.getText().toString().trim();
+            String newName = etName.getText().toString().trim();
+            
+            if (newNim.isEmpty() || newName.isEmpty()) {
+                Toast.makeText(UpdateActivity.this, "Data tidak boleh kosong!", Toast.LENGTH_SHORT).show();
+            } else {
+                int count = dbHelper.updateUser(student.getId(), newNim, newName);
+                if (count > 0) {
+                    Toast.makeText(UpdateActivity.this, "Update berhasil!", Toast.LENGTH_SHORT).show();
+                    finish(); // Tutup activity dan kembali ke ListMahasiswaActivity
+                } else {
+                    Toast.makeText(UpdateActivity.this, "Gagal mengupdate data", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+}
+
+
+// Package: com.example.pretes_nama.adapter
+package com.example.pretes_nama.adapter;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.pretes_nama.R;
+import com.example.pretes_nama.UpdateActivity;
+import com.example.pretes_nama.db.DbHelper;
+import com.example.pretes_nama.model.Mahasiswa;
+import java.io.Serializable;
+import java.util.ArrayList;
+
+public class MahasiswaAdapter extends RecyclerView.Adapter<MahasiswaAdapter.StudentViewHolder> {
+
+    private ArrayList<Mahasiswa> listStudents = new ArrayList<>();
+    private Activity activity;
+    private DbHelper dbHelper;
+
+    public MahasiswaAdapter(Activity activity) {
+        this.activity = activity;
+        dbHelper = new DbHelper(activity);
+    }
+
+    public void setListStudents(ArrayList<Mahasiswa> listNotes) {
+        this.listStudents.clear();
+        this.listStudents.addAll(listNotes);
+        notifyDataSetChanged();
+    }
+
+    @NonNull
+    @Override
+    public StudentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_mahasiswa, parent, false);
+        return new StudentViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull StudentViewHolder holder, @SuppressLint("RecyclerView") int position) {
+        Mahasiswa student = listStudents.get(position);
+        holder.tvNim.setText(student.getNim());
+        holder.tvName.setText(student.getName());
+
+        // EDIT (U) button listener
+        holder.btnEdit.setOnClickListener((View v) -> {
+            Intent intent = new Intent(activity, UpdateActivity.class);
+            intent.putExtra("user", (Serializable) student);
+            activity.startActivity(intent);
+        });
+
+        // DELETE (D) button listener
+        holder.btnDelete.setOnClickListener((View v) -> {
+            new AlertDialog.Builder(activity)
+                .setTitle("Konfirmasi Hapus")
+                .setMessage("Yakin hapus data NIM: " + student.getNim() + "?")
+                .setPositiveButton("YA", (dialog, which) -> {
+                    dbHelper.deleteUser(student.getId());
+                    
+                    // Refresh data di adapter
+                    listStudents.remove(position);
+                    notifyItemRemoved(position);
+                    notifyItemRangeChanged(position, listStudents.size());
+
+                    Toast.makeText(activity, "Hapus berhasil!", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("TIDAK", (dialog, which) -> dialog.dismiss())
+                .show();
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return listStudents.size();
+    }
+
+    public static class StudentViewHolder extends RecyclerView.ViewHolder {
+        final TextView tvNim, tvName;
+        final Button btnEdit, btnDelete;
+
+        public StudentViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvNim = itemView.findViewById(R.id.tv_item_nim);
+            tvName = itemView.findViewById(R.id.tv_item_name);
+            btnEdit = itemView.findViewById(R.id.btn_edit);
+            btnDelete = itemView.findViewById(R.id.btn_delete);
+        }
+    }
+}
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TAMBAH DATA MAHASISWA"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:layout_marginBottom="24dp"/>
+
+    <EditText
+        android:id="@+id/edt_nim"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="NIM Mahasiswa"
+        android:inputType="number"
+        android:maxLines="1"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/edt_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nama Lengkap"
+        android:inputType="textCapSentences"
+        android:maxLines="1"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SIMPAN DATA" />
+
+    <Button
+        android:id="@+id/btn_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="LIHAT DAFTAR MAHASISWA" />
+</LinearLayout>
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ListMahasiswaActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".UpdateActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="UBAH DATA MAHASISWA"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:layout_marginBottom="24dp"/>
+
+    <EditText
+        android:id="@+id/edt_nim"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="NIM Mahasiswa"
+        android:inputType="number"
+        android:maxLines="1"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/edt_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nama Lengkap"
+        android:inputType="textCapSentences"
+        android:maxLines="1"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="UPDATE DATA" />
+</LinearLayout>
+
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
+        app:cardUseCompatPadding="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tv_item_nim"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="1502023"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_item_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fikrul Ilmi"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/btn_edit"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="EDIT"
+                    style="@style/Widget.AppCompat.Button.Colored"/>
+
+                <Button
+                    android:id="@+id/btn_delete"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+
+android:layout_Rools="$"
+                    android:layout_marginStart="4dp"
+                    android:text="DELETE"
+                    style="@style/Widget.AppCompat.Button.Danger"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+
+
+
+
+</LinearLayout>
+
+
