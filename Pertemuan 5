@@ -1,0 +1,138 @@
+
+🧩 MainActivity.java
+package com.example.komponenmaterialfikrul;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextInputEditText etNama;
+    private MaterialButton btnSubmit;
+    private FloatingActionButton fab;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        etNama = findViewById(R.id.etNama);
+        btnSubmit = findViewById(R.id.btnSubmit);
+        fab = findViewById(R.id.fab);
+
+        // Tombol Kirim ditekan
+        btnSubmit.setOnClickListener(v -> {
+            String nama = etNama.getText() != null ? etNama.getText().toString().trim() : "";
+            if (nama.isEmpty()) {
+                Snackbar.make(v, "Nama belum diisi!", Snackbar.LENGTH_SHORT).show();
+            } else {
+                Snackbar.make(v, "Halo, " + nama + "!", Snackbar.LENGTH_LONG).show();
+            }
+        });
+
+        // Floating Action Button ditekan
+        fab.setOnClickListener(v ->
+                Snackbar.make(v, "FAB ditekan!", Snackbar.LENGTH_SHORT).show()
+        );
+    }
+}
+
+🎨 activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- CardView sebagai kontainer utama -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- TextInputLayout -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Masukkan Nama"
+                app:startIconDrawable="@android:drawable/ic_menu_edit"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/purple_500">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNama"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Material Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSubmit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Kirim"
+                style="@style/Widget.MaterialComponents.Button.Filled"
+                app:cornerRadius="12dp"
+                app:icon="@android:drawable/ic_menu_send"
+                app:iconPadding="8dp"
+                app:iconTint="@color/white" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Floating Action Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:contentDescription="Tambah"
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:tint="@color/white"
+        app:backgroundTint="@color/purple_500" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+🌈 values/themes/themes.xml
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme -->
+    <style name="Theme.KomponenMaterialFikrul" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Warna utama -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Warna sekunder -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Warna status bar -->
+        <item name="android:statusBarColor"
+            tools:targetApi="l">?attr/colorPrimaryVariant</item>
+
+        <!-- Gunakan style Material -->
+        <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+        <item name="android:buttonStyle">@style/Widget.MaterialComponents.Button</item>
+        <item name="floatingActionButtonStyle">@style/Widget.MaterialComponents.FloatingActionButton</item>
+    </style>
+</resources>
