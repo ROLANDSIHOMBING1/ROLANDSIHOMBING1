@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Multimedia - Audio &amp; Video"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Audio Player: lagu.mp3"
+        android:textStyle="italic"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/btnPlay"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="PLAY Audio" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="STOP Audio" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Video Player: video.mp4"
+        android:textStyle="italic"
+        android:layout_marginBottom="8dp"/>
+
+    <VideoView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
+    
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/profil"
+        android:contentDescription="Gambar Profil" />
+
+</LinearLayout>
+
+
+package com.example.multimediafikrul; // Ganti dengan nama package project Anda
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.MediaController;
+import android.widget.VideoView;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity {
+
+    MediaPlayer mediaPlayer;
+    Button btnPlay, btnStop;
+    VideoView videoView;
+    ImageView imageView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // 1. Inisialisasi Komponen
+        imageView = findViewById(R.id.imageView);
+        btnPlay = findViewById(R.id.btnPlay);
+        btnStop = findViewById(R.id.btnStop);
+        videoView = findViewById(R.id.videoView);
+
+        // 2. LOGIKA AUDIO (MediaPlayer)
+        // MediaPlayer.create() mengambil resource dari res/raw/lagu.mp3
+        mediaPlayer = MediaPlayer.create(this, R.raw.lagu);
+        
+        // Listener Tombol PLAY
+        btnPlay.setOnClickListener(v -> {
+            if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                Toast.makeText(this, "Memutar Audio...", Toast.LENGTH_SHORT).show();
+            } else if (mediaPlayer != null && mediaPlayer.isPlaying()){
+                Toast.makeText(this, "Audio sudah dimainkan.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Listener Tombol STOP
+        btnStop.setOnClickListener(v -> {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                mediaPlayer.seekTo(0); // Kembali ke awal
+                Toast.makeText(this, "Audio Dihentikan.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Pastikan Audio dilepaskan ketika activity dihancurkan
+        mediaPlayer.setOnCompletionListener(mp -> {
+            Toast.makeText(this, "Pemutaran Audio Selesai.", Toast.LENGTH_SHORT).show();
+        });
+
+
+        // 3. LOGIKA VIDEO (VideoView)
+        // Mendapatkan URI dari file video.mp4 di folder res/raw
+        String path = "android.resource://" + getPackageName() + "/" + R.raw.video;
+        Uri uri = Uri.parse(path);
+        
+        // Menetapkan URI ke VideoView
+        videoView.setVideoURI(uri);
+
+        // Menambahkan kontrol (Play, Pause, Seekbar)
+        MediaController mediaController = new MediaController(this);
+        mediaController.setAnchorView(videoView);
+        videoView.setMediaController(mediaController);
+        
+        // Memulai pemutaran (Opsional: Anda bisa menggunakan tombol terpisah untuk Play/Stop Video)
+        // videoView.start(); 
+        
+        // Listener untuk memberitahu ketika video sudah siap diputar
+        videoView.setOnPreparedListener(mp -> {
+            Toast.makeText(this, "Video Siap Diputar. Tekan tombol Play di kontrol.", Toast.LENGTH_LONG).show();
+        });
+
+        // Listener untuk memberitahu ketika pemutaran video selesai
+        videoView.setOnCompletionListener(mp -> {
+            Toast.makeText(this, "Pemutaran Video Selesai.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Melepaskan sumber daya MediaPlayer saat aplikasi ditutup
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+}
+
