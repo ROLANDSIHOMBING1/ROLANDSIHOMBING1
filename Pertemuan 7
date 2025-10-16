@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="8dp"
+    android:orientation="vertical"
+    android:background="#FFF5F5F5"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Masukan Data"
+        android:inputType="textPersonName" />
+
+    <Button
+        android:id="@+id/save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Simpan" />
+
+    <TextView
+        android:id="@+id/output"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Output Data:"
+        android:textStyle="bold" />
+
+</LinearLayout>
+
+
+package com.example.sharedpreferences;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+    // Deklarasi Variable Pendukung
+    private TextView Hasil; [cite: 746]
+    private EditText Masukan; [cite: 747]
+    private Button Eksekusi; [cite: 748]
+    
+    // Deklarasi dan Inisialisasi SharedPreferences
+    private SharedPreferences preferences; [cite: 750]
+    // Digunakan Untuk Konfigurasi SharedPreferences
+    private SharedPreferences.Editor editor; [cite: 751]
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Inisialisasi View Components
+        Masukan = (EditText) findViewById(R.id.input); [cite: 754]
+        Hasil = (TextView) findViewById(R.id.output);
+        Eksekusi = (Button) findViewById(R.id.save); [cite: 755]
+
+        // Membuat File Baru Beserta Modifiernya
+        preferences = getSharedPreferences("Belajar_SharedPreferences", [cite: 757]
+                Context.MODE_PRIVATE); [cite: 758]
+
+        // Set OnClickListener for the Save Button
+        Eksekusi.setOnClickListener(new View.OnClickListener() { [cite: 759]
+            @Override
+            public void onClick(View view) { [cite: 760]
+                getData(); [cite: 763]
+                Toast.makeText(getApplicationContext(), "Data Tersimpan", [cite: 764]
+                        Toast.LENGTH_SHORT).show(); [cite: 765]
+            }
+        });
+
+        // Tampilkan data yang sudah tersimpan saat aplikasi dimulai
+        displayData();
+    }
+
+    private void getData() { [cite: 770]
+        // Mendapatkan Input dari user
+        String getKonten = Masukan.getText().toString(); [cite: 773]
+        
+        // Digunakan Untuk Pengaturan Konfigurasi SharedPreferences
+        editor = preferences.edit(); [cite: 774]
+        
+        // Memasukan Data Pada Editor SharedPreferences dengan key (data_saya)
+        editor.putString("data_saya", getKonten); [cite: 775]
+        
+        // Menjalankan Operasi
+        editor.apply(); [cite: 777]
+        
+        // Menampilkan Output
+        displayData();
+    }
+
+    private void displayData() {
+        // Mengambil data dan menampilkannya di TextView
+        String savedData = preferences.getString("data_saya", null);
+        Hasil.setText("Output Data: " + savedData); [cite: 779]
+    }
+}
+
+

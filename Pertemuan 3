@@ -1,0 +1,247 @@
+// File: build.gradle (Module: app)
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.projectakhir" // Ganti sesuai nama package
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // Core Dependencies
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // SQLite (Jika menggunakan Room, akan berbeda) dan RecyclerView umumnya
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+
+    // Testing Dependencies (Opsional)
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+
+// Package: com.example.projectakhir.model
+package com.example.projectakhir.model;
+
+import java.io.Serializable;
+
+public class Masyarakat implements Serializable {
+    private int id;
+    private String nama, alamat; // Contoh field: nama dan alamat
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNama() {
+        return nama;
+    }
+
+    public void setNama(String nama) {
+        this.nama = nama;
+    }
+
+    public String getAlamat() {
+        return alamat;
+    }
+
+    public void setAlamat(String alamat) {
+        this.alamat = alamat;
+    }
+}
+
+
+// Package: com.example.projectakhir.db
+package com.example.projectakhir.db;
+
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import com.example.projectakhir.model.Masyarakat;
+import java.util.ArrayList;
+
+public class DbHelper extends SQLiteOpenHelper {
+    private static final String DATABASE_NAME = "dbprojectakhir";
+    private static final int DATABASE_VERSION = 1;
+    private static final String TABLE_MASYARAKAT = "masyarakat";
+    private static final String KEY_ID = "id";
+    private static final String KEY_NAMA = "nama";
+    private static final String KEY_ALAMAT = "alamat";
+
+    // Query untuk membuat tabel
+    private static final String CREATE_TABLE_MASYARAKAT = "CREATE TABLE "
+            + TABLE_MASYARAKAT + "(" + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_NAMA + " TEXT, " + KEY_ALAMAT + " TEXT);";
+
+    public DbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_TABLE_MASYARAKAT);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_MASYARAKAT);
+        onCreate(db);
+    }
+
+    // CREATE: Tambah data baru
+    public long addMasyarakat(String nama, String alamat) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_NAMA, nama);
+        values.put(KEY_ALAMAT, alamat);
+        
+        long insert = db.insert(TABLE_MASYARAKAT, null, values);
+        db.close();
+        return insert;
+    }
+
+    // READ: Ambil semua data
+    @SuppressLint("Range")
+    public ArrayList<Masyarakat> getAllMasyarakat() {
+        ArrayList<Masyarakat> masyarakatList = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_MASYARAKAT;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        if (c.moveToFirst()) {
+            do {
+                Masyarakat data = new Masyarakat();
+                data.setId(c.getInt(c.getColumnIndex(KEY_ID)));
+                data.setNama(c.getString(c.getColumnIndex(KEY_NAMA)));
+                data.setAlamat(c.getString(c.getColumnIndex(KEY_ALAMAT)));
+                masyarakatList.add(data);
+            } while (c.moveToNext());
+        }
+        c.close();
+        return masyarakatList;
+    }
+}
+
+
+
+// Package: com.example.projectakhir
+package com.example.projectakhir;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import com.example.projectakhir.db.DbHelper;
+
+public class MainActivity extends AppCompatActivity {
+    DbHelper dbHelper;
+    private EditText etNama, etAlamat;
+    private Button btnSave;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main); // Layout untuk input data
+        
+        dbHelper = new DbHelper(this);
+
+        // Inisialisasi Views
+        etNama = findViewById(R.id.edt_nama); // Asumsi ID di layout: edt_nama
+        etAlamat = findViewById(R.id.edt_alamat); // Asumsi ID di layout: edt_alamat
+        btnSave = findViewById(R.id.btn_submit); // Asumsi ID di layout: btn_submit
+
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String nama = etNama.getText().toString();
+                String alamat = etAlamat.getText().toString();
+
+                if (nama.isEmpty() || alamat.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Nama dan Alamat harus diisi!", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Simpan data ke DB
+                    long result = dbHelper.addMasyarakat(nama, alamat);
+                    if (result > 0) {
+                        Toast.makeText(MainActivity.this, "Data Masyarakat Berhasil Disimpan", Toast.LENGTH_SHORT).show();
+                        etNama.setText("");
+                        etAlamat.setText("");
+                        // Tambahkan intent ke activity list di sini jika diperlukan
+                    } else {
+                        Toast.makeText(MainActivity.this, "Gagal menyimpan data", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+    }
+}
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/edt_nama"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nama Lengkap"
+        android:inputType="textPersonName"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/edt_alamat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Alamat"
+        android:inputType="textPostalAddress"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btn_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SIMPAN DATA" />
+
+</LinearLayout>
+
