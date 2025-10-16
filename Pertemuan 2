@@ -1,37 +1,38 @@
+📁model/Mahasiswa.java
 package com.example.mahasiswa.model;
 
 import java.io.Serializable;
 
 public class Mahasiswa implements Serializable {
-    private int id; //
-    private String name, nim; //
+    private int id;
+    private String name, nim;
 
     public int getId() {
-        return id; //
+        return id;
     }
 
     public void setId(int id) {
-        this.id = id; //
+        this.id = id;
     }
 
     public String getName() {
-        return name; //
+        return name;
     }
 
     public void setName(String name) {
-        this.name = name; //
+        this.name = name;
     }
 
     public String getNim() {
-        return nim; //
+        return nim;
     }
 
     public void setNim(String nim) {
-        this.nim = nim; //
+        this.nim = nim;
     }
 }
 
-
+📁 db/DbHelper.java
 
 package com.example.mahasiswa.db;
 
@@ -41,160 +42,87 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
 import com.example.mahasiswa.model.Mahasiswa;
+
 import java.util.ArrayList;
 
 public class DbHelper extends SQLiteOpenHelper {
-    public static String DATABASE_NAME = "dbsiakad"; //
-    private static final int DATABASE_VERSION = 1; //
-    private static final String TABLE_STD = "students"; //
-    private static final String KEY_ID = "id"; //
-    private static final String KEY_NAME = "name"; //
-    private static final String KEY_NIM = "nim"; //
 
-    // Query to create the students table
-    private static final String CREATE_TABLE_STUDENTS = "CREATE TABLE "
-            + TABLE_STD + "(" + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + KEY_NAME + " TEXT, " + KEY_NIM + " TEXT);"; //
+    public static final String DATABASE_NAME = "dbsiakad";
+    private static final int DATABASE_VERSION = 1;
+    private static final String TABLE_STD = "students";
+    private static final String KEY_ID = "id";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_NIM = "nim";
 
-    public DbHelper(Context context) { //
-        super(context, DATABASE_NAME, null, DATABASE_VERSION); //
+    private static final String CREATE_TABLE_STUDENTS =
+            "CREATE TABLE " + TABLE_STD + "(" +
+                    KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    KEY_NAME + " TEXT, " +
+                    KEY_NIM + " TEXT);";
+
+    public DbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) { //
-        db.execSQL(CREATE_TABLE_STUDENTS); //
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_TABLE_STUDENTS);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) { //
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STD); //
-        onCreate(db); //
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STD);
+        onCreate(db);
     }
 
-    // CREATE: Add new student
-    public long addUserDetail(String nim, String name) { //
-        SQLiteDatabase db = this.getWritableDatabase(); //
-        ContentValues values = new ContentValues(); //
-        values.put(KEY_NAME, name); //
-        values.put(KEY_NIM, nim); //
-        
-        long insert = db.insert(TABLE_STD, null, values); //
-        return insert; //
+    public long addUserDetail(String nim, String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_NAME, name);
+        values.put(KEY_NIM, nim);
+        return db.insert(TABLE_STD, null, values);
     }
 
-    // READ: Get all students
     @SuppressLint("Range")
-    public ArrayList<Mahasiswa> getAllUsers() { //
-        ArrayList<Mahasiswa> userModelArrayList = new ArrayList<>(); //
-        String selectQuery = "SELECT * FROM " + TABLE_STD; //
-        SQLiteDatabase db = this.getReadableDatabase(); //
-        Cursor c = db.rawQuery(selectQuery, null); //
+    public ArrayList<Mahasiswa> getAllUsers() {
+        ArrayList<Mahasiswa> list = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_STD;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
 
-        if (c.moveToFirst()) { //
-            do { //
-                Mahasiswa std = new Mahasiswa(); //
-                std.setId(c.getInt(c.getColumnIndex(KEY_ID))); //
-                std.setName(c.getString(c.getColumnIndex(KEY_NAME))); //
-                std.setNim(c.getString(c.getColumnIndex(KEY_NIM))); //
-                userModelArrayList.add(std); //
-            } while (c.moveToNext()); //
+        if (c.moveToFirst()) {
+            do {
+                Mahasiswa std = new Mahasiswa();
+                std.setId(c.getInt(c.getColumnIndex(KEY_ID)));
+                std.setName(c.getString(c.getColumnIndex(KEY_NAME)));
+                std.setNim(c.getString(c.getColumnIndex(KEY_NIM)));
+                list.add(std);
+            } while (c.moveToNext());
         }
         c.close();
-        return userModelArrayList; //
-    }
-    
-    // UPDATE: Update existing student
-    public int updateUser(int id, String nim, String name) { //
-        SQLiteDatabase db = this.getWritableDatabase(); //
-        ContentValues values = new ContentValues(); //
-        values.put(KEY_NAME, name); //
-        values.put(KEY_NIM, nim); //
-
-        return db.update(TABLE_STD, values, KEY_ID + " = ?", //
-                new String[]{String.valueOf(id)}); //
+        return list;
     }
 
-    // DELETE: Delete a student by ID
-    public void deleteUser(int id) { //
-        SQLiteDatabase db = this.getWritableDatabase(); //
-        db.delete(TABLE_STD, KEY_ID + " = ?", //
-                new String[]{String.valueOf(id)}); //
+    public int updateUser(int id, String nim, String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_NAME, name);
+        values.put(KEY_NIM, nim);
+        return db.update(TABLE_STD, values, KEY_ID + "=?", new String[]{String.valueOf(id)});
+    }
+
+    public void deleteUser(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_STD, KEY_ID + "=?", new String[]{String.valueOf(id)});
     }
 }
 
-
-
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    android:orientation="vertical">
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cv_item_student"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="4dp"
-        app:cardMaxElevation="4dp"
-        app:cardUseCompatPadding="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:id="@+id/tv_item_nim"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:gravity="start"
-                android:text="1502023"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tv_item_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:text="Fikrul Ilmi"
-                android:textSize="14sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btn_edit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="38dp"
-                    android:layout_weight="1"
-                    android:text="Edit" />
-
-                <Button
-                    android:id="@+id/btn_delete"
-                    android:layout_width="wrap_content"
-                    android:layout_height="38dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:text="Delete" />
-            </LinearLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-</LinearLayout>
-
+📁 adapter/MahasiswaAdapter.java
 
 package com.example.mahasiswa.adapter;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -205,175 +133,141 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.mahasiswa.ListMahasiswaActivity;
 import com.example.mahasiswa.R;
 import com.example.mahasiswa.UpdateActivity;
 import com.example.mahasiswa.db.DbHelper;
 import com.example.mahasiswa.model.Mahasiswa;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class MahasiswaAdapter extends RecyclerView.Adapter<MahasiswaAdapter.StudentViewHolder> { // [cite: 130, 131]
+public class MahasiswaAdapter extends RecyclerView.Adapter<MahasiswaAdapter.StudentViewHolder> {
 
-    private ArrayList<Mahasiswa> listStudents = new ArrayList<>(); // [cite: 132]
-    private Activity activity; // [cite: 133]
-    private DbHelper dbHelper; // [cite: 134]
+    private ArrayList<Mahasiswa> listStudents = new ArrayList<>();
+    private Activity activity;
+    private DbHelper dbHelper;
 
-    public MahasiswaAdapter(Activity activity) { // [cite: 135]
-        this.activity = activity; // [cite: 137, 138]
-        dbHelper = new DbHelper(activity); // [cite: 139]
+    public MahasiswaAdapter(Activity activity) {
+        this.activity = activity;
+        dbHelper = new DbHelper(activity);
     }
 
-    public ArrayList<Mahasiswa> getListStudents() {
-        return listStudents; // [cite: 140, 142]
-    }
-
-    public void setListStudents(ArrayList<Mahasiswa> listNotes) { // [cite: 143]
-        if (listNotes.size() > 0) { // [cite: 144]
-            this.listStudents.clear(); // [cite: 145]
-        }
-        this.listStudents.addAll(listNotes); // [cite: 146]
-        notifyDataSetChanged(); // [cite: 147]
+    public void setListStudents(ArrayList<Mahasiswa> listNotes) {
+        this.listStudents.clear();
+        this.listStudents.addAll(listNotes);
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public StudentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) { // [cite: 149, 150, 151, 152]
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_mahasiswa, parent, false); // [cite: 153, 154]
-        return new StudentViewHolder(view); // [cite: 156]
+    public StudentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_mahasiswa, parent, false);
+        return new StudentViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull StudentViewHolder holder, @SuppressLint("RecyclerView") int position) { // [cite: 157, 158, 159]
-        // Bind data to TextViews
-        holder.tvNim.setText(listStudents.get(position).getNim()); // [cite: 160]
-        holder.tvName.setText(listStudents.get(position).getName()); // [cite: 160]
+    public void onBindViewHolder(@NonNull StudentViewHolder holder, int position) {
+        Mahasiswa student = listStudents.get(position);
+        holder.tvNim.setText(student.getNim());
+        holder.tvName.setText(student.getName());
 
-        // EDIT Button Listener
-        holder.btnEdit.setOnClickListener((View v) -> { // [cite: 161]
-            Intent intent = new Intent(activity, UpdateActivity.class); // [cite: 162]
-            intent.putExtra("user", (Serializable) listStudents.get(position)); // [cite: 162, 163]
-            activity.startActivity(intent); // [cite: 165]
+        holder.btnEdit.setOnClickListener(v -> {
+            Intent intent = new Intent(activity, UpdateActivity.class);
+            intent.putExtra("user", (Serializable) student);
+            activity.startActivity(intent);
         });
 
-        // DELETE Button Listener
-        holder.btnDelete.setOnClickListener((View v) -> { // [cite: 166]
-            AlertDialog.Builder builder = new AlertDialog.Builder(activity); // [cite: 167]
-            builder.setTitle("Konfirmasi hapus"); // [cite: 168]
-            builder.setMessage("Apakah yakin akan dihapus?"); // [cite: 169]
-
-            builder.setPositiveButton("YA", new DialogInterface.OnClickListener() { // [cite: 170, 171]
-                @Override
-                public void onClick(DialogInterface dialog, int which) { // [cite: 174]
-                    dbHelper.deleteUser(listStudents.get(position).getId()); // Delete from DB [cite: 174]
-                    Toast.makeText(activity, "Hapus berhasil!", Toast.LENGTH_SHORT).show(); // [cite: 174, 175]
-                    
-                    // Refresh the list activity
-                    Intent myIntent = new Intent(activity, ListMahasiswaActivity.class); // [cite: 176, 177]
-                    activity.startActivity(myIntent); // [cite: 178]
-                    activity.finish(); // [cite: 178]
-                }
-            });
-
-            builder.setNegativeButton("TIDAK", new DialogInterface.OnClickListener() { // [cite: 181, 182]
-                @Override
-                public void onClick(DialogInterface dialog, int which) { // [cite: 184]
-                    dialog.dismiss(); // [cite: 189]
-                }
-            });
-            
-            AlertDialog alert = builder.create(); // [cite: 190]
-            alert.show(); // [cite: 190]
+        holder.btnDelete.setOnClickListener(v -> {
+            new AlertDialog.Builder(activity)
+                    .setTitle("Konfirmasi hapus")
+                    .setMessage("Apakah yakin akan dihapus?")
+                    .setPositiveButton("YA", (DialogInterface dialog, int which) -> {
+                        dbHelper.deleteUser(student.getId());
+                        Toast.makeText(activity, "Hapus berhasil!", Toast.LENGTH_SHORT).show();
+                        Intent i = new Intent(activity, ListMahasiswaActivity.class);
+                        activity.startActivity(i);
+                        activity.finish();
+                    })
+                    .setNegativeButton("TIDAK", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
     }
 
     @Override
     public int getItemCount() {
-        return listStudents.size(); // [cite: 192, 194]
+        return listStudents.size();
     }
 
-    public static class StudentViewHolder extends RecyclerView.ViewHolder { // [cite: 195]
-        final TextView tvNim, tvName; // [cite: 196]
-        final Button btnEdit, btnDelete; // [cite: 197]
+    public static class StudentViewHolder extends RecyclerView.ViewHolder {
+        TextView tvNim, tvName;
+        Button btnEdit, btnDelete;
 
-        public StudentViewHolder(@NonNull View itemView) { // [cite: 198]
-            super(itemView); // [cite: 200]
-            tvNim = itemView.findViewById(R.id.tv_item_nim); // [cite: 199, 201]
-            tvName = itemView.findViewById(R.id.tv_item_name); // [cite: 199, 202]
-            btnEdit = itemView.findViewById(R.id.btn_edit); // [cite: 199, 203]
-            btnDelete = itemView.findViewById(R.id.btn_delete); // [cite: 204, 208]
+        public StudentViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvNim = itemView.findViewById(R.id.tv_item_nim);
+            tvName = itemView.findViewById(R.id.tv_item_name);
+            btnEdit = itemView.findViewById(R.id.btn_edit);
+            btnDelete = itemView.findViewById(R.id.btn_delete);
         }
     }
 }
 
-
-
+📁 MainActivity.java
 
 package com.example.mahasiswa;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import android.content.Intent;
 import com.example.mahasiswa.db.DbHelper;
 
-public class MainActivity extends AppCompatActivity { // [cite: 279]
-    DbHelper dbHelper; // [cite: 280]
-    private EditText etName, etNim; // [cite: 281]
-    private Button btnSave, btnList; // [cite: 282]
+public class MainActivity extends AppCompatActivity {
+
+    DbHelper dbHelper;
+    EditText etName, etNim;
+    Button btnSave, btnList;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) { // [cite: 283, 284]
-        super.onCreate(savedInstanceState); // [cite: 285]
-        setContentView(R.layout.activity_main); // [cite: 286]
-        dbHelper = new DbHelper(this); // [cite: 286]
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new DbHelper(this);
 
-        // Initialize Views
-        etName = findViewById(R.id.edt_name); // [cite: 287]
-        etNim = findViewById(R.id.edt_nim); // [cite: 287]
-        btnSave = findViewById(R.id.btn_submit); // [cite: 288]
-        btnList = findViewById(R.id.btn_list); // [cite: 288]
+        etName = findViewById(R.id.edt_name);
+        etNim = findViewById(R.id.edt_nim);
+        btnSave = findViewById(R.id.btn_submit);
+        btnList = findViewById(R.id.btn_list);
 
-        // Save Button Listener
-        btnSave.setOnClickListener(new View.OnClickListener() { // [cite: 290]
-            @Override
-            public void onClick(View v) { // [cite: 292]
-                String nim = etNim.getText().toString();
-                String name = etName.getText().toString();
+        btnSave.setOnClickListener(v -> {
+            String nim = etNim.getText().toString();
+            String name = etName.getText().toString();
 
-                if (nim.isEmpty()) { // [cite: 293]
-                    Toast.makeText(MainActivity.this, "Error: Nim harus diisi!", Toast.LENGTH_SHORT).show(); // [cite: 293, 294]
-                } else if (name.isEmpty()) { // [cite: 297]
-                    Toast.makeText(MainActivity.this, "Error: Nama harus diisi!", Toast.LENGTH_SHORT).show(); // [cite: 295, 296]
-                } else {
-                    // Save data to DB
-                    dbHelper.addUserDetail(nim, name); // [cite: 298, 299]
-                    
-                    // Clear input fields
-                    etName.setText(""); // [cite: 300]
-                    etNim.setText(""); // [cite: 301]
-                    
-                    Toast.makeText(MainActivity.this, "Simpan berhasil!", Toast.LENGTH_SHORT).show(); // [cite: 302, 303]
-                }
+            if (nim.isEmpty() || name.isEmpty()) {
+                Toast.makeText(this, "NIM dan Nama harus diisi!", Toast.LENGTH_SHORT).show();
+            } else {
+                dbHelper.addUserDetail(nim, name);
+                Toast.makeText(this, "Data tersimpan!", Toast.LENGTH_SHORT).show();
+                etNim.setText("");
+                etName.setText("");
             }
         });
 
-        // List Button Listener (Navigate to ListMahasiswaActivity)
-        btnList.setOnClickListener(new View.OnClickListener() { // [cite: 307]
-            @Override
-            public void onClick(View v) { // [cite: 309]
-                Intent intent = new Intent(MainActivity.this, ListMahasiswaActivity.class); // [cite: 310, 311]
-                startActivity(intent); // [cite: 312]
-            }
+        btnList.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, ListMahasiswaActivity.class));
         });
     }
 }
 
+📁 ListMahasiswaActivity.java
 
 package com.example.mahasiswa;
 
@@ -386,209 +280,215 @@ import com.example.mahasiswa.db.DbHelper;
 import com.example.mahasiswa.model.Mahasiswa;
 import java.util.ArrayList;
 
-public class ListMahasiswaActivity extends AppCompatActivity { // [cite: 219]
-    private RecyclerView recyclerView; // [cite: 220]
-    private MahasiswaAdapter adapter; // [cite: 221]
-    private ArrayList<Mahasiswa> studentsArrayList; // [cite: 222]
-    private DbHelper dbHelper; // [cite: 222]
+public class ListMahasiswaActivity extends AppCompatActivity {
+
+    RecyclerView recyclerView;
+    MahasiswaAdapter adapter;
+    DbHelper dbHelper;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) { // [cite: 223, 224]
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list_mahasiswa); // [cite: 225]
+        setContentView(R.layout.activity_list_mahasiswa);
 
-        // Initialize Views and Helpers
-        recyclerView = findViewById(R.id.rview); // [cite: 226]
-        adapter = new MahasiswaAdapter(this); // [cite: 226]
-        dbHelper = new DbHelper(this); // [cite: 227]
+        recyclerView = findViewById(R.id.rview);
+        adapter = new MahasiswaAdapter(this);
+        dbHelper = new DbHelper(this);
 
-        // Get data from DB
-        studentsArrayList = dbHelper.getAllUsers(); // [cite: 228]
-        adapter.setListStudents(studentsArrayList); // [cite: 229]
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
 
-        // Setup RecyclerView
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(ListMahasiswaActivity.this); // [cite: 230, 231]
-        recyclerView.setLayoutManager(layoutManager); // [cite: 232]
-        recyclerView.setAdapter(adapter); // [cite: 233]
+        loadData();
+    }
+
+    private void loadData() {
+        ArrayList<Mahasiswa> list = dbHelper.getAllUsers();
+        adapter.setListStudents(list);
     }
 
     @Override
-    protected void onResume() { // [cite: 236, 237]
-        super.onResume(); // [cite: 238]
-        // Refresh data on returning to the activity (e.g., after an update or delete)
-        studentsArrayList = dbHelper.getAllUsers(); // [cite: 239]
-        adapter.setListStudents(studentsArrayList); // [cite: 240]
-        adapter.notifyDataSetChanged(); // [cite: 241]
+    protected void onResume() {
+        super.onResume();
+        loadData();
     }
 }
 
-
+📁 UpdateActivity.java
 
 package com.example.mahasiswa;
 
-import android.content.Intent;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
 import com.example.mahasiswa.db.DbHelper;
 import com.example.mahasiswa.model.Mahasiswa;
 
-public class UpdateActivity extends AppCompatActivity { // [cite: 326]
-    private DbHelper dbHelper; // [cite: 327]
-    private EditText etName, etNim; // [cite: 328]
-    private Button btnSave; // [cite: 329]
-    private Mahasiswa student; // [cite: 330]
+public class UpdateActivity extends AppCompatActivity {
+
+    EditText etName, etNim;
+    Button btnSave;
+    DbHelper dbHelper;
+    Mahasiswa student;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) { // [cite: 332, 333]
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_update); // [cite: 334]
+        setContentView(R.layout.activity_update);
 
-        dbHelper = new DbHelper(this); // [cite: 335]
+        dbHelper = new DbHelper(this);
+        etName = findViewById(R.id.edt_name);
+        etNim = findViewById(R.id.edt_nim);
+        btnSave = findViewById(R.id.btn_submit);
 
-        // Initialize Views
-        etName = findViewById(R.id.edt_name); // [cite: 336]
-        etNim = findViewById(R.id.edt_nim); // [cite: 337]
-        btnSave = findViewById(R.id.btn_submit); // [cite: 338]
+        student = (Mahasiswa) getIntent().getSerializableExtra("user");
+        etName.setText(student.getName());
+        etNim.setText(student.getNim());
 
-        // Get student object passed from adapter
-        Intent intent = getIntent(); // [cite: 339]
-        student = (Mahasiswa) intent.getSerializableExtra("user"); // [cite: 340]
-
-        // Set current data to EditTexts
-        etName.setText(student.getName()); // [cite: 341]
-        etNim.setText(student.getNim()); // [cite: 342]
-
-        // Save Button Listener (Update)
-        btnSave.setOnClickListener((View v) -> { // [cite: 343]
-            // Update data in DB
-            dbHelper.updateUser(student.getId(), etNim.getText().toString(), etName.getText().toString()); // [cite: 344, 345]
-            
-            Toast.makeText(UpdateActivity.this, "Updated berhasil!", Toast.LENGTH_SHORT).show(); // [cite: 346, 347]
-            
-            finish(); // Close the activity [cite: 348]
+        btnSave.setOnClickListener(v -> {
+            dbHelper.updateUser(student.getId(), etNim.getText().toString(), etName.getText().toString());
+            Toast.makeText(this, "Data berhasil diupdate!", Toast.LENGTH_SHORT).show();
+            finish();
         });
     }
 }
 
+📁 res/layout/item_mahasiswa.xml
 
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tv_item_nim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1502023"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_item_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fikrul Ilmi"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btn_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit" />
+
+            <Button
+                android:id="@+id/btn_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Delete" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+
+📁 res/layout/activity_main.xml
 
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".MainActivity">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <com.google.android.material.textfield.TextInputLayout
+    <EditText
+        android:id="@+id/edt_nim"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:hint="NIM"
+        android:inputType="text" />
 
-        <EditText
-            android:id="@+id/edt_nim"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="NIM"
-            android:inputType="textCapSentences"
-            android:maxLines="1" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
+    <EditText
+        android:id="@+id/edt_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
-
-        <EditText
-            android:id="@+id/edt_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nama lengkap"
-            android:inputType="textCapSentences"
-            android:maxLines="1" />
-    </com.google.android.material.textfield.TextInputLayout>
+        android:hint="Nama Lengkap"
+        android:inputType="textPersonName"
+        android:layout_marginTop="8dp"/>
 
     <Button
         android:id="@+id/btn_submit"
-        style="@style/Base.Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Simpan" />
+        android:text="Simpan"
+        android:layout_marginTop="12dp"/>
 
     <Button
         android:id="@+id/btn_list"
-        style="@style/Base.Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Daftar Students" />
+        android:text="Lihat Daftar Mahasiswa"
+        android:layout_marginTop="8dp"/>
 </LinearLayout>
 
+📁 res/layout/activity_list_mahasiswa.xml
 
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ListMahasiswaActivity">
+    android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
+        android:layout_height="match_parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
 
-
+📁 res/layout/activity_update.xml
 
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".MainActivity">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <com.google.android.material.textfield.TextInputLayout
+    <EditText
+        android:id="@+id/edt_nim"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:hint="NIM" />
 
-        <EditText
-            android:id="@+id/edt_nim"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="NIM"
-            android:inputType="textCapSentences"
-            android:maxLines="1" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
+    <EditText
+        android:id="@+id/edt_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
-
-        <EditText
-            android:id="@+id/edt_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nama lengkap"
-            android:inputType="textCapSentences"
-            android:maxLines="1" />
-    </com.google.android.material.textfield.TextInputLayout>
+        android:hint="Nama Lengkap"
+        android:layout_marginTop="8dp" />
 
     <Button
         android:id="@+id/btn_submit"
-        style="@style/Base.Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Update" />
-
+        android:text="Update"
+        android:layout_marginTop="12dp" />
 </LinearLayout>
