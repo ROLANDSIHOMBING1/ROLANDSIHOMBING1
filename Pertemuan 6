@@ -1,0 +1,191 @@
+🧩 1. MainActivity.java
+package com.example.multimediafikrul;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.MediaController;
+import android.widget.VideoView;
+
+public class MainActivity extends AppCompatActivity {
+
+    // Deklarasi komponen
+    private MediaPlayer mediaPlayer;
+    private Button btnPlay, btnStop;
+    private VideoView videoView;
+    private ImageView imageView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Inisialisasi komponen dari layout
+        imageView = findViewById(R.id.imageView);
+        btnPlay = findViewById(R.id.btnPlay);
+        btnStop = findViewById(R.id.btnStop);
+        videoView = findViewById(R.id.videoView);
+
+        // === AUDIO ===
+        mediaPlayer = MediaPlayer.create(this, R.raw.lagu);
+
+        btnPlay.setOnClickListener(v -> {
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+            }
+        });
+
+        btnStop.setOnClickListener(v -> {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                mediaPlayer.seekTo(0); // Reset ke awal lagu
+            }
+        });
+
+        // === VIDEO ===
+        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.video;
+        Uri uri = Uri.parse(videoPath);
+        videoView.setVideoURI(uri);
+
+        MediaController mediaController = new MediaController(this);
+        videoView.setMediaController(mediaController);
+        mediaController.setAnchorView(videoView);
+
+        videoView.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Pastikan MediaPlayer dilepas saat activity dihancurkan
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+}
+
+🧱 2. activity_main.xml
+Pastikan layout ini berada di:
+app/src/main/res/layout/activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Gambar -->
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/profil"
+            android:contentDescription="Gambar Profil"
+            android:scaleType="centerCrop" />
+
+        <!-- Tombol Audio -->
+        <Button
+            android:id="@+id/btnPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="▶ Play Audio"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏹ Stop Audio" />
+
+        <!-- Video -->
+        <VideoView
+            android:id="@+id/videoView"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+</ScrollView>
+
+
+🎵 3. File Pendukung (Resource)
+Letakkan file berikut di lokasi tepat agar tidak error:
+
+📸 Gambar
+Nama file: profil.png
+
+Letak: app/src/main/res/drawable/profil.png
+
+🎧 Audio
+Nama file: lagu.mp3
+
+Letak: app/src/main/res/raw/lagu.mp3
+(Jika folder raw belum ada → klik kanan res → New → Android Resource Directory → Resource type: raw → OK)
+
+🎬 Video
+Nama file: video.mp4
+
+Letak: app/src/main/res/raw/video.mp4
+⚠️ Ukuran file maksimal 20MB agar tidak membuat project error saat build.
+
+📂 Struktur Folder Akhir
+app/
+ └─ src/
+    └─ main/
+       ├─ java/
+       │   └─ com/example/multimediafikrul/
+       │        └─ MainActivity.java
+       ├─ res/
+       │   ├─ layout/
+       │   │    └─ activity_main.xml
+       │   ├─ drawable/
+       │   │    └─ profil.png
+       │   └─ raw/
+       │        ├─ lagu.mp3
+       │        └─ video.mp4
+       └─ AndroidManifest.xml
+
+📱 4. AndroidManifest.xml (Pastikan Tambahan Ini Ada)
+
+Tambahkan izin berikut agar video dan audio dapat diputar dengan lancar:
+
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+Biasanya manifest lengkapnya seperti ini:
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.multimediafikrul">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:allowBackup="true"
+        android:label="MultimediaFikrul"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
